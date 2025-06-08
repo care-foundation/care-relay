@@ -1,5 +1,11 @@
 # Memoria Técnica - care-relay-r1
 
+> **NOTA IMPORTANTE**:
+> Esta versión de care-relay-r1 está alineada 100% con este documento.
+> No incluye nickname, autenticación, buffers circulares, canales semánticos ni persistencia de mensajes.
+> Solo incluye relay de mensajes genéricos, rooms y monitoreo de conexiones en memoria, sin seguridad ni validaciones estrictas.
+> Para agregar nuevas features, crear PRs específicos referenciando este documento como base de comparación.
+
 ## 1. Introducción
 
 ### 1.1 Propósito del Documento
@@ -260,6 +266,13 @@ Client <-> Load Balancer <-> Multiple Node.js Instances <-> Redis Cluster
 - **Memory leaks**: Gestión manual de conexiones
 - **Performance degradation**: Sin circuit breakers
 - **Security gaps**: Sin authentication implementada
+
+## Features No Implementadas / Fuera de Alcance
+- Gestión de nickname
+- Autenticación y autorización
+- Persistencia de mensajes
+- Buffers circulares
+- Seguridad avanzada
 
 ---
 

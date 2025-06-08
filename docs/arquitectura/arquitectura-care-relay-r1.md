@@ -12,6 +12,12 @@ Este documento define la arquitectura del sistema **care-relay-r1**, un relay de
 - **Extensibilidad**: Arquitectura modular para futuras funcionalidades
 - **Mantenibilidad**: Código limpio y bien documentado
 
+> **NOTA IMPORTANTE**:
+> Esta versión de care-relay-r1 está alineada 100% con este documento.
+> No incluye nickname, autenticación, buffers circulares, canales semánticos ni persistencia de mensajes.
+> Solo incluye relay de mensajes genéricos, rooms y monitoreo de conexiones en memoria, sin seguridad ni validaciones estrictas.
+> Para agregar nuevas features, crear PRs específicos referenciando este documento como base de comparación.
+
 ## 2. Arquitectura de Alto Nivel
 
 ### 2.1 Diagrama de Arquitectura General
@@ -597,6 +603,13 @@ graph TB
     M1 --> |Distribute| R
     R --> |Persist| DB
 ```
+
+## Features No Implementadas / Fuera de Alcance
+- Autenticación de usuarios
+- Persistencia de mensajes
+- Buffers circulares
+- Canales semánticos
+- Seguridad avanzada
 
 ---
 

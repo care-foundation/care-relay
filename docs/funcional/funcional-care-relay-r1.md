@@ -27,7 +27,14 @@
 - Encriptación end-to-end
 - Moderación de contenido
 
+> **NOTA IMPORTANTE**:
+> Esta versión de care-relay-r1 está alineada 100% con este documento.
+> No incluye nickname, autenticación, buffers circulares, canales semánticos ni persistencia de mensajes.
+> Solo incluye relay de mensajes genéricos, rooms y monitoreo de conexiones en memoria, sin seguridad ni validaciones estrictas.
+> Para agregar nuevas features, crear PRs específicos referenciando este documento como base de comparación.
+
 ## 2. Casos de Uso Principales
+
 
 ### 2.1 Diagrama de Casos de Uso
 
@@ -98,28 +105,7 @@ graph TB
 1. Cliente establece conexión WebSocket con el servidor
 2. Servidor asigna un ID único al cliente
 3. Cliente recibe confirmación de conexión exitosa
-4. Cliente se registra con un nickname opcional
-5. Sistema notifica a otros usuarios la nueva conexión (opcional)
 
-**Eventos WebSocket**:
-- `connection` - Conexión establecida
-- `client_connected` - Notificación de nuevo cliente
-- `assign_id` - Asignación de ID único
-
-#### 3.1.2 Gestión de Identidad
-**Descripción**: Asignación y gestión de identidad de usuarios conectados.
-
-**Flujo Principal**:
-1. Cliente envía evento `set_nickname`
-2. Sistema valida el nickname (único, válido)
-3. Sistema asigna o actualiza el nickname
-4. Sistema confirma la asignación
-5. Otros usuarios son notificados del cambio
-
-**Validaciones**:
-- Nickname debe ser único en el sistema
-- Longitud mínima: 3 caracteres, máxima: 20
-- Solo caracteres alfanuméricos y guiones
 
 ### 3.2 Comunicación de Mensajes
 
@@ -137,7 +123,6 @@ graph TB
 {
   "type": "broadcast_message",
   "sender_id": "client_123",
-  "sender_nickname": "usuario1",
   "message": "Contenido del mensaje",
   "timestamp": "2024-01-01T12:00:00Z"
 }
@@ -157,7 +142,6 @@ graph TB
 {
   "type": "private_message",
   "sender_id": "client_123",
-  "sender_nickname": "usuario1",
   "recipient_id": "client_456",
   "message": "Mensaje privado",
   "timestamp": "2024-01-01T12:00:00Z"
@@ -199,10 +183,7 @@ graph TB
 #### 3.4.1 API REST de Estadísticas
 **Descripción**: Endpoint para consultar estadísticas del sistema.
 
-**Endpoints**:
-- `GET /api/stats` - Estadísticas generales
-- `GET /api/clients` - Lista de clientes conectados
-- `GET /api/rooms` - Lista de salas activas
+- `GET /stats` - Estadísticas generales
 
 **Respuesta de Estadísticas**:
 ```json
@@ -232,7 +213,6 @@ graph TB
 2. Sistema establece conexión WebSocket
 3. Servidor asigna ID único al cliente
 4. Usuario recibe confirmación de conexión
-5. Usuario puede opcionalmente establecer nickname
 
 **Postcondiciones**:
 - Cliente conectado y registrado en el sistema
@@ -240,7 +220,6 @@ graph TB
 
 **Flujos Alternativos**:
 - **4a**: Error de conexión - Sistema muestra mensaje de error y reintenta
-- **5a**: Nickname ya existe - Sistema solicita nickname alternativo
 
 ### 4.2 UC2 - Enviar Mensaje General
 
@@ -277,7 +256,7 @@ graph TB
 **Precondiciones**:
 - Usuario está conectado al sistema
 - Usuario destinatario está conectado
-- Usuario conoce el ID o nickname del destinatario
+- Usuario conoce el ID del destinatario
 
 **Flujo Principal**:
 1. Usuario selecciona destinatario de la lista
@@ -352,7 +331,6 @@ graph TB
 - Puedo conectarme con un solo clic
 - Recibo confirmación visual de conexión exitosa
 - Se me asigna un identificador único automáticamente
-- Puedo establecer un nickname opcional
 
 #### HU-002: Envío de Mensajes Públicos
 **Como** usuario conectado  
@@ -363,7 +341,7 @@ graph TB
 - Puedo escribir mensajes de hasta 500 caracteres
 - Los mensajes se envían al presionar Enter o botón Enviar
 - Todos los usuarios conectados reciben mi mensaje
-- Mi mensaje aparece con mi nickname y timestamp
+- Mi mensaje aparece con timestamp
 
 #### HU-003: Mensajes Privados
 **Como** usuario conectado  
@@ -410,7 +388,6 @@ graph TB
 **Criterios de Aceptación**:
 - Veo lista actualizada de usuarios conectados
 - La lista se actualiza automáticamente cuando usuarios se conectan/desconectan
-- Puedo ver nicknames de usuarios
 - Puedo identificar usuarios disponibles para mensajes privados
 
 #### HU-007: Estadísticas para Administradores
@@ -455,11 +432,6 @@ graph TB
 
 #### 6.1.1 Eventos del Cliente al Servidor
 ```javascript
-// Establecer nickname
-{
-  "type": "set_nickname",
-  "nickname": "mi_usuario"
-}
 
 // Mensaje general
 {
@@ -493,9 +465,9 @@ graph TB
   "room_name": "javascript-devs"
 }
 
-// Solicitar lista de usuarios
+// Solicitar lista de usuarios conectados
 {
-  "type": "get_clients"
+  "type": "get_connected_users"
 }
 ```
 
@@ -503,16 +475,16 @@ graph TB
 ```javascript
 // Confirmación de conexión
 {
-  "type": "connection_confirmed",
-  "client_id": "client_123",
-  "message": "Conexión establecida"
+  "type": "connection_info",
+  "id": "client_123",
+  "totalConnections": 5,
+  "timestamp": "2024-01-01T12:00:00Z"
 }
 
 // Mensaje general recibido
 {
   "type": "broadcast_message",
   "sender_id": "client_456",
-  "sender_nickname": "otro_usuario",
   "message": "Hola a todos",
   "timestamp": "2024-01-01T12:00:00Z"
 }
@@ -521,19 +493,17 @@ graph TB
 {
   "type": "private_message",
   "sender_id": "client_456",
-  "sender_nickname": "otro_usuario",
   "message": "Mensaje privado",
   "timestamp": "2024-01-01T12:00:00Z"
 }
 
-// Lista de usuarios conectados
 {
-  "type": "clients_list",
-  "clients": [
+  "type": "connected_users",
+  "users": [
     {
       "id": "client_123",
-      "nickname": "usuario1",
-      "connected_at": "2024-01-01T11:30:00Z"
+      "connected_at": "2024-01-01T11:30:00Z",
+      "rooms": ["general"]
     }
   ]
 }
@@ -551,7 +521,7 @@ graph TB
 
 #### 6.2.1 Endpoints de Estadísticas
 ```
-GET /api/stats
+GET /stats
 Content-Type: application/json
 
 Response:
@@ -562,44 +532,6 @@ Response:
   "uptime_seconds": 185400,
   "server_version": "1.0.0",
   "timestamp": "2024-01-01T12:00:00Z"
-}
-```
-
-#### 6.2.2 Endpoints de Clientes
-```
-GET /api/clients
-Content-Type: application/json
-
-Response:
-{
-  "total_clients": 150,
-  "clients": [
-    {
-      "id": "client_123",
-      "nickname": "usuario1",
-      "connected_at": "2024-01-01T11:30:00Z",
-      "rooms": ["general", "javascript-devs"]
-    }
-  ]
-}
-```
-
-#### 6.2.3 Endpoints de Salas
-```
-GET /api/rooms
-Content-Type: application/json
-
-Response:
-{
-  "total_rooms": 12,
-  "rooms": [
-    {
-      "name": "javascript-devs",
-      "member_count": 15,
-      "created_at": "2024-01-01T10:00:00Z",
-      "last_activity": "2024-01-01T11:59:00Z"
-    }
-  ]
 }
 ```
 
@@ -650,6 +582,13 @@ Response:
 - Logs de seguridad y auditoría
 - Protección contra ataques DDoS
 - Sanitización de mensajes para prevenir XSS
+
+## Features No Implementadas / Fuera de Alcance
+- Gestión de nickname
+- Autenticación y autorización
+- Persistencia de mensajes
+- Buffers circulares
+- Seguridad avanzada
 
 ---
 
